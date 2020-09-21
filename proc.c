@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "processInfo.h"
 
 struct {
   struct spinlock lock;
@@ -342,6 +343,7 @@ scheduler(void)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+	  p->context_switch_cnt++;
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
@@ -538,5 +540,83 @@ hello(void)
 {
 	cprintf("helloxv6\n");
 	return 0;
+}
+
+int 
+hello_name(char* name)
+{
+	cprintf("hello %s\n",name);
+	return 0;
+}
+
+int
+get_num_proc(void)
+{
+	struct proc *ps;
+	int cnt = 0;
+
+	acquire(&ptable.lock);
+
+	for(ps = ptable.proc; ps < &ptable.proc[NPROC]; ps++)
+	{
+		if(ps->state == EMBRYO)
+			cnt++;
+		else if(ps->state == SLEEPING)
+			cnt++;
+		else if(ps->state == RUNNABLE)
+			cnt++;
+		else if(ps->state == RUNNING)
+			cnt++;
+		else if(ps->state == ZOMBIE)
+			cnt++;
+	}
+
+	release(&ptable.lock);
+	return cnt;
+}
+
+int
+get_max_pid(void)
+{
+	struct proc *ps;
+	int max = 0;
+
+	acquire(&ptable.lock);
+
+	for(ps = ptable.proc; ps < &ptable.proc[NPROC]; ps++)
+	{
+		if(max < ps->pid)
+			max = ps->pid;
+	}
+	release(&ptable.lock);
+	return max;
+}
+
+
+int
+get_proc_info(int pid, struct processInfo* info)
+{
+	struct proc *ps;
+	int is_exist = 0;
+
+	acquire(&ptable.lock);
+	for(ps = ptable.proc; ps < &ptable.proc[NPROC]; ps++)
+	{
+		if(ps->pid == pid){
+			if(ps->parent != 0)
+				info->ppid = ps->parent->pid;
+			else
+				info->ppid = 0;
+			info->psize = ps->sz;
+			info->numberContextSwitches = ps->context_switch_cnt;
+			is_exist = 1;
+			break;
+		}
+	}
+	release(&ptable.lock);
+	if(is_exist)
+		return 0;
+	else
+		return -1;
 }
 

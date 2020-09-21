@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "processInfo.h"
 
 int
 sys_fork(void)
@@ -96,8 +97,45 @@ sys_halt(void)
 	outb(0xf4, 0x00);
 	return 0;
 }
+
 int
 sys_hello(void)
 {
 	return hello();
+}
+
+int
+sys_hello_name(void)
+{
+	char *name;
+
+	if(argstr(0, &name) < 0)
+		return -1;
+	return hello_name(name);
+}
+
+int
+sys_get_num_proc(void)
+{
+	return get_num_proc();
+}
+
+int
+sys_get_max_pid(void)
+{
+	return get_max_pid();
+}
+
+int
+sys_get_proc_info(void)
+{
+	int pid;
+	struct processInfo *info;
+
+  	if(argint(0, &pid) < 0)
+    	return -1;
+	if(argptr(1, (void*)&info, sizeof(*info)) < 0)
+		return -1;
+
+	return get_proc_info(pid, info);
 }

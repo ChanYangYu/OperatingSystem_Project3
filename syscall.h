@@ -22,3 +22,7 @@
 #define SYS_close  21
 #define SYS_halt   22
 #define SYS_hello  23
+#define SYS_hello_name 24
+#define SYS_get_num_proc 25
+#define SYS_get_max_pid 26
+#define SYS_get_proc_info 27
