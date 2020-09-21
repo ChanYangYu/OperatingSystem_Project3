@@ -92,7 +92,7 @@ sys_uptime(void)
 }
 
 int
-sys_halt(void)
+sys_quit(void)
 {
 	outb(0xf4, 0x00);
 	return 0;

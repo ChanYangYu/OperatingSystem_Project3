@@ -20,7 +20,7 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
-#define SYS_halt   22
+#define SYS_quit   22
 #define SYS_hello  23
 #define SYS_hello_name 24
 #define SYS_get_num_proc 25

@@ -24,7 +24,7 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int halt(void);
+int quit(void);
 int hello(void);
 int hello_name(char* name);
 int get_num_proc(void);
