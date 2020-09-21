@@ -592,7 +592,6 @@ get_max_pid(void)
 	return max;
 }
 
-
 int
 get_proc_info(int pid, struct processInfo* info)
 {
@@ -620,3 +619,21 @@ get_proc_info(int pid, struct processInfo* info)
 		return -1;
 }
 
+int
+set_prio(int n)
+{
+	struct proc* ps;
+
+	ps = myproc();
+	ps->priority = n;
+	return 0;
+}
+
+int
+get_prio(void)
+{
+	struct proc* ps;
+
+	ps = myproc();
+	return ps->priority;
+}

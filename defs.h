@@ -126,6 +126,8 @@ int				hello_name(char* name);
 int				get_num_proc(void);
 int 			get_max_pid(void);
 int				get_proc_info(int pid, struct processInfo *info);
+int				set_prio(int n);
+int 			get_prio(void);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

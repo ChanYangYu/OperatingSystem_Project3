@@ -139,3 +139,19 @@ sys_get_proc_info(void)
 
 	return get_proc_info(pid, info);
 }
+
+int
+sys_set_prio(void)
+{
+	int n;
+
+	if(argint(0, &n) < 0)
+		return -1;
+	return set_prio(n);
+}
+
+int
+sys_get_prio(void)
+{
+	return get_prio();
+}
