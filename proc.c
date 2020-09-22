@@ -89,6 +89,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->priority = 0;
 
   release(&ptable.lock);
 
@@ -624,8 +625,10 @@ set_prio(int n)
 {
 	struct proc* ps;
 
+	acquire(&ptable.lock);
 	ps = myproc();
 	ps->priority = n;
+	release(&ptable.lock);
 	return 0;
 }
 
@@ -633,7 +636,11 @@ int
 get_prio(void)
 {
 	struct proc* ps;
+	int prio;
 
+	acquire(&ptable.lock);
 	ps = myproc();
-	return ps->priority;
+	prio = ps->priority;
+	release(&ptable.lock);
+	return prio;
 }

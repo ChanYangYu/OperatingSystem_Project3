@@ -14,6 +14,10 @@ main(int argc, char* argv[])
 	else
 		n = atoi(argv[1]);
 		
+	if(n <= 0){
+		printf(2,"error: Priorty Number is not positive number\n");
+		exit();
+	}
 	printf(1,"Before priority of process : %d\n",get_prio());
 
 	set_prio(n);
