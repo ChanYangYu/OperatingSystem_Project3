@@ -51,6 +51,7 @@ struct proc {
   char name[16];               // Process name (debugging)
   int context_switch_cnt;	   // Context switch count
   int priority;				   // Process priorty for new scheduler
+  int tq;					   // Process time quantum 
 };
 
 // Process memory is laid out contiguously, low addresses first:

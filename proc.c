@@ -16,6 +16,7 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
+int cur_priority = -1;
 extern void forkret(void);
 extern void trapret(void);
 
@@ -89,7 +90,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->priority = 0;
+  p->priority = -1;
+  p->tq = 1;
 
   release(&ptable.lock);
 
@@ -324,7 +326,7 @@ wait(void)
 void
 scheduler(void)
 {
-  struct proc *p;
+  struct proc *p, *p2, *high;
   struct cpu *c = mycpu();
   c->proc = 0;
   
@@ -338,13 +340,49 @@ scheduler(void)
       if(p->state != RUNNABLE)
         continue;
 
+	  ////////////////////////////////////////////
+	  
+	  int flag = 1;
+	  high = p;
+	  for(p2 = ptable.proc; p2 < &ptable.proc[NPROC]; p2++){
+		  if(p2->state != RUNNABLE)
+			  continue;
+		  //처음 실행되는 프로세스 일경우
+		  if(p2->priority == -1){
+			  high = p2;
+			  flag = 0;
+			  break;
+		  }
+		  //가장 우선순위가 높은 프로세스선택
+		  if(high->priority < p2->priority){
+			  high = p2;
+		  }
+		  /*cprintf("high : %d,%d myproc : ",
+				  high->pid,high->priority);
+		  cprintf("\n");
+		  */
+	  }
+	  //가장 우선순위가 높으면
+	  if(flag && high->priority > cur_priority)
+	  {
+		  //cprintf("high : %d cur : %d\n",high->priority, cur_priority);
+		  high->tq = 2;
+	  }
+	  //현재 우선순위값 업데이트
+	  cur_priority = high->priority;
+	  p = high;
+	  ////////////////////////////////////////////
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
-	  p->context_switch_cnt++;
+	  ////////////////////////////////////
+	  //이전 프로세스
+	  p2 = myproc();
+	  p2->context_switch_cnt++;
+	  ////////////////////////////////////
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
