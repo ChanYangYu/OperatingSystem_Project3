@@ -104,11 +104,13 @@ trap(struct trapframe *tf)
   // If interrupts were on while locks held, would need to check nlock.
   if(myproc() && myproc()->state == RUNNING &&
      tf->trapno == T_IRQ0+IRQ_TIMER){
-	  int tq = myproc()->tq;
-	  if(tq > 1)
-		  myproc()->tq = 1;
+	  struct proc* p = myproc();
+	  //cprintf("cpuid : %d ",mycpu()->apicid);
+	  //cprintf("pid : %d prio : %d tq : %d\n",p->pid, p->priority,p->tq);
+	  if(p->tq > 1)
+		  p->tq--;
 	  else
-    	yield();
+		  yield();
   }
 
   // Check if the process has been killed since we yielded

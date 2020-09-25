@@ -16,7 +16,7 @@ struct {
 static struct proc *initproc;
 
 int nextpid = 1;
-int cur_priority = -1;
+int cur_priority[2] = {-1, -1};
 extern void forkret(void);
 extern void trapret(void);
 
@@ -91,6 +91,7 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
   p->priority = -1;
+  p->context_switch_cnt = 0;
   p->tq = 1;
 
   release(&ptable.lock);
@@ -326,7 +327,7 @@ wait(void)
 void
 scheduler(void)
 {
-  struct proc *p, *p2, *high;
+  struct proc *p, *p2, *first, *second;
   struct cpu *c = mycpu();
   c->proc = 0;
   
@@ -340,39 +341,55 @@ scheduler(void)
       if(p->state != RUNNABLE)
         continue;
 
-	  ////////////////////////////////////////////
-	  
+      ////////////////////////////////////////////
 	  int flag = 1;
-	  high = p;
+	  first = p;
+	  second = p;
 	  for(p2 = ptable.proc; p2 < &ptable.proc[NPROC]; p2++){
 		  if(p2->state != RUNNABLE)
 			  continue;
-		  //처음 실행되는 프로세스 일경우
-		  if(p2->priority == -1){
-			  high = p2;
+		  //일반 프로세스 일경우 cpu1에서 수행
+		  if(p2->priority == -1 && mycpu()->apicid == 1){
+			  first = p2;
 			  flag = 0;
 			  break;
 		  }
 		  //가장 우선순위가 높은 프로세스선택
-		  if(high->priority < p2->priority){
-			  high = p2;
+		  if(first->priority < p2->priority){
+			  second = first;
+			  first = p2;
 		  }
 		  /*cprintf("high : %d,%d myproc : ",
 				  high->pid,high->priority);
 		  cprintf("\n");
 		  */
 	  }
-	  //가장 우선순위가 높으면
-	  if(flag && high->priority > cur_priority)
-	  {
-		  //cprintf("high : %d cur : %d\n",high->priority, cur_priority);
-		  high->tq = 2;
+	  //cpu == 0
+	  if(mycpu()->apicid == 0){
+		  if(flag && first->priority >= cur_priority[0])
+		  {
+			  //cprintf("high : %d cur : %d\n",high->priority, cur_priority);
+		  	  first->tq = 3;
+	  	  }
+	  	  //현재 우선순위값 업데이트
+	  	  cur_priority[0] = first->priority;
+	  	  p = first;
 	  }
-	  //현재 우선순위값 업데이트
-	  cur_priority = high->priority;
-	  p = high;
-	  ////////////////////////////////////////////
-      // Switch to chosen process.  It is the process's job
+	  //cpu == 1
+	  else{
+		  if(cur_priority[1] == first->priority){
+			  p = second;
+			  second->tq = 1;
+			  cur_priority[1] = second->priority;
+		  }
+		  else{
+			  p = first;
+			  first->tq = 2;
+			  cur_priority[1] = first->priority;
+		  }
+	  }
+      ////////////////////////////////////////////
+	  // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
       c->proc = p;
