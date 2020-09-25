@@ -329,6 +329,7 @@ scheduler(void)
 {
   struct proc *p, *p2, *first, *second;
   struct cpu *c = mycpu();
+  int pr_cnt;
   c->proc = 0;
   
   for(;;){
@@ -343,33 +344,39 @@ scheduler(void)
 
       ////////////////////////////////////////////
 	  int flag = 1;
+	  pr_cnt = 0;
 	  first = p;
 	  second = p;
 	  for(p2 = ptable.proc; p2 < &ptable.proc[NPROC]; p2++){
 		  if(p2->state != RUNNABLE)
 			  continue;
-		  //일반 프로세스 일경우 cpu1에서 수행
-		  if(p2->priority == -1 && mycpu()->apicid == 1){
+		  //우선순위가 없는 프로세스 일경우
+		  if(p2->priority == -1){
 			  first = p2;
 			  flag = 0;
 			  break;
 		  }
+		  pr_cnt++;
 		  //가장 우선순위가 높은 프로세스선택
 		  if(first->priority < p2->priority){
 			  second = first;
 			  first = p2;
 		  }
-		  /*cprintf("high : %d,%d myproc : ",
-				  high->pid,high->priority);
-		  cprintf("\n");
-		  */
 	  }
+	  //우선순위가 없는 프로세스일 경우
+	  if(flag == 0)
+		  p = first;
 	  //cpu == 0
-	  if(mycpu()->apicid == 0){
+	  else if(c->apicid == 0){
+		  //우선순위 프로세스가 2개 이하일 경우
+		  if(pr_cnt < 2){
+			  c->proc = 0;
+			  continue;
+		  }
 		  if(flag && first->priority >= cur_priority[0])
 		  {
 			  //cprintf("high : %d cur : %d\n",high->priority, cur_priority);
-		  	  first->tq = 3;
+		  	  first->tq = 5;
 	  	  }
 	  	  //현재 우선순위값 업데이트
 	  	  cur_priority[0] = first->priority;
