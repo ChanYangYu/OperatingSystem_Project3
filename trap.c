@@ -105,8 +105,6 @@ trap(struct trapframe *tf)
   if(myproc() && myproc()->state == RUNNING &&
      tf->trapno == T_IRQ0+IRQ_TIMER){
 	  struct proc* p = myproc();
-	  //cprintf("cpuid : %d ",mycpu()->apicid);
-	  //cprintf("pid : %d prio : %d tq : %d\n",p->pid, p->priority,p->tq);
 	  if(p->tq > 1)
 		  p->tq--;
 	  else

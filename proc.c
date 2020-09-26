@@ -341,9 +341,8 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-
       ////////////////////////////////////////////
-	  int flag = 1;
+	  int flag = 0;
 	  pr_cnt = 0;
 	  first = p;
 	  second = p;
@@ -353,7 +352,7 @@ scheduler(void)
 		  //우선순위가 없는 프로세스 일경우
 		  if(p2->priority == -1){
 			  first = p2;
-			  flag = 0;
+			  flag = 1;
 			  break;
 		  }
 		  pr_cnt++;
@@ -364,7 +363,7 @@ scheduler(void)
 		  }
 	  }
 	  //우선순위가 없는 프로세스일 경우
-	  if(flag == 0)
+	  if(flag)
 		  p = first;
 	  //cpu == 0
 	  else if(c->apicid == 0){
@@ -373,11 +372,9 @@ scheduler(void)
 			  c->proc = 0;
 			  continue;
 		  }
+		  //현재 priority max값 일경우
 		  if(flag && first->priority >= cur_priority[0])
-		  {
-			  //cprintf("high : %d cur : %d\n",high->priority, cur_priority);
 		  	  first->tq = 5;
-	  	  }
 	  	  //현재 우선순위값 업데이트
 	  	  cur_priority[0] = first->priority;
 	  	  p = first;
